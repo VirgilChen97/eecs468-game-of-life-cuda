@@ -1,0 +1,2 @@
+/usr/bin/ar cr libgame_of_life_utils.a  CMakeFiles/game_of_life_utils.dir/stdafx.cpp.o
+/usr/bin/ranlib libgame_of_life_utils.a
