@@ -1,3 +1,0 @@
-/home/yct2284/Documents/code/build/CMakeFiles/game_of_life.dir
-/home/yct2284/Documents/code/build/CMakeFiles/game_of_life_kernels.dir
-/home/yct2284/Documents/code/build/CMakeFiles/game_of_life_utils.dir

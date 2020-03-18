@@ -1,2 +1,0 @@
-/usr/bin/ar cr libgame_of_life_kernels.a  CMakeFiles/game_of_life_kernels.dir/./game_of_life_kernels_generated_CudaLife.cu.o
-/usr/bin/ranlib libgame_of_life_kernels.a
