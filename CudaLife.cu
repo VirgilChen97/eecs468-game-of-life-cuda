@@ -304,9 +304,6 @@ namespace mf {
 		}
 
 		size_t encWorldSize = worldEncDataWidth * worldHeight;
-		if (encWorldSize > std::numeric_limits<uint>::max()) {
-			return false;
-		}
 
 		if ((encWorldSize / bytesPerThread) % threadsCount != 0) {
 			return false;

@@ -27,7 +27,7 @@ namespace mf {
 	// camera
 	int zoom = -2;
 	Vector2i translate = Vector2i(0, 0);
-	ubyte* textureData = nullptr;
+	ubyte* textureData = NULL;
 	size_t textureWidth = screenWidth;
 	size_t textureHeight = screenHeight;
 	bool cyclicWorld = false;
@@ -44,24 +44,24 @@ namespace mf {
 	CpuLife cpuLife;
 	GpuLife gpuLife;
 
-	ubyte* d_cpuDisplayData = nullptr;
+	ubyte* d_cpuDisplayData = NULL;
 
 
 	/// Host-side texture pointer.
-	uchar4* h_textureBufferData = nullptr;
+	uchar4* h_textureBufferData = NULL;
 	/// Device-side texture pointer.
-	uchar4* d_textureBufferData = nullptr;
+	uchar4* d_textureBufferData = NULL;
 
 	GLuint gl_pixelBufferObject = 0;
 	GLuint gl_texturePtr = 0;
-	cudaGraphicsResource* cudaPboResource = nullptr;
+	cudaGraphicsResource* cudaPboResource = NULL;
 
 	void freeAllBuffers() {
 		cpuLife.freeBuffers();
 		gpuLife.freeBuffers();
 
 		checkCudaErrors(cudaFree(d_cpuDisplayData));
-		d_cpuDisplayData = nullptr;
+		d_cpuDisplayData = NULL;
 	}
 
 
@@ -75,9 +75,9 @@ namespace mf {
 		gpuLife.resize(worldWidth, worldHeight);
 	}
 
-	void initWorld(bool gpu, bool bitLife) {
+	void initWorld(bool gpu, bool bitLife, size_t worldWidth, size_t worldHeight) {
 		if (gpu) {
-			gpuLife.initThis(bitLife, cpuLife);
+			gpuLife.initThis(bitLife, cpuLife, worldWidth, worldHeight);
 		}
 		else {
 			cpuLife.initThis();  // Potential bad_alloc.
@@ -91,18 +91,18 @@ namespace mf {
 
 		bool ppc = !resetWorldPostprocessDisplay;
 
-		if (gpuLife.getLifeData() != nullptr) {
-			assert(gpuLife.getBpcLifeData() == nullptr);
-			assert(d_cpuDisplayData == nullptr);
+		if (gpuLife.getLifeData() != NULL) {
+			assert(gpuLife.getBpcLifeData() == NULL);
+			assert(d_cpuDisplayData == NULL);
 			runVisualization(gpuLife.getLifeData(), worldWidth, worldHeight, d_textureBufferData, screenWidth, screenHeight,
 				translate.x, translate.y, zoom, ppc, cyclicWorld, false);
 		}
-		else if (gpuLife.getBpcLifeData() != nullptr) {
-			assert(d_cpuDisplayData == nullptr);
+		else if (gpuLife.getBpcLifeData() != NULL) {
+			assert(d_cpuDisplayData == NULL);
 			runVisualization(gpuLife.getBpcLifeData(), worldWidth, worldHeight, d_textureBufferData, screenWidth, screenHeight,
 				translate.x, translate.y, zoom, ppc, cyclicWorld, true);
 		}
-		else if (d_cpuDisplayData != nullptr) {
+		else if (d_cpuDisplayData != NULL) {
 			runVisualization(d_cpuDisplayData, worldWidth, worldHeight, d_textureBufferData, screenWidth, screenHeight,
 				translate.x, translate.y, zoom, ppc, cyclicWorld, true);
 		}
@@ -123,18 +123,18 @@ namespace mf {
 				return std::numeric_limits<float>::quiet_NaN();
 			}
 
-			initWorld(false, bitLife);
+			initWorld(false, bitLife, worldWidth, worldHeight);
 
-			assert(d_cpuDisplayData == nullptr);
+			assert(d_cpuDisplayData == NULL);
 			checkCudaErrors(cudaMalloc((void**)&d_cpuDisplayData, encWorldSize));
 		}
 
-		auto t1 = std::chrono::high_resolution_clock::now();
+		clock_t t1 = clock();
 		bool result = cpuLife.iterate(iteratinos);
-		auto t2 = std::chrono::high_resolution_clock::now();
+		clock_t t2 = clock();
 
 		if (!result) {
-			return std::numeric_limits<float>::quiet_NaN();
+			return -1.0;
 		}
 
 		cpuLife.encodeDataToBpc();
@@ -142,7 +142,7 @@ namespace mf {
 		checkCudaErrors(cudaMemcpy(d_cpuDisplayData, cpuLife.getBpcLifeData(), encWorldSize,
 			cudaMemcpyHostToDevice));
 
-		return std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000.0f;
+		return (t2 - t1) * 1.0 / CLOCKS_PER_SEC * 1000.0f;
 	}
 
 	float runCudaLife(size_t iteratinos, ushort threadsCount, bool bitLife, uint bitLifeBytesPerTrhead) 
@@ -153,19 +153,19 @@ namespace mf {
 			if (!gpuLife.allocBuffers(bitLife)) {
 				return std::numeric_limits<float>::quiet_NaN();
 			}
-			initWorld(true, bitLife);
+			initWorld(true, bitLife, worldWidth, worldHeight);
 		}
 
 
-		auto t1 = std::chrono::high_resolution_clock::now();
+		clock_t t1 = clock();
 		bool result = gpuLife.iterate(iteratinos,threadsCount, bitLife, bitLifeBytesPerTrhead);
-		auto t2 = std::chrono::high_resolution_clock::now();
+		clock_t t2 = clock();
 
 		if (!result) {
-			return std::numeric_limits<float>::quiet_NaN();
+			return -1.0;
 		}
 
-		return std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000.0f;
+		return (t2 - t1)*1.0 / CLOCKS_PER_SEC * 1000.0f;
 	}
 
 	void drawTexture() {
@@ -195,7 +195,7 @@ namespace mf {
 		// Free any previously allocated buffers
 
 		delete[] h_textureBufferData;
-		h_textureBufferData = nullptr;
+		h_textureBufferData = NULL;
 
 		glDeleteTextures(1, &gl_texturePtr);
 		gl_texturePtr = 0;
@@ -455,4 +455,3 @@ namespace mf {
 int main(int argc, char** argv) {
 	return mf::runGui(argc, argv);
 }
-
